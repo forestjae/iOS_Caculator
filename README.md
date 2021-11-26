@@ -208,7 +208,7 @@ SceneDelegate는 scene에서 일어나는 lifecycle event에 대해 다루고 �
 <br/>
 
 
-## 1️⃣ Step 3
+## 3️⃣ Step 3
 ---
 ### 🤔 Step 3에서 고민했던 부분 
 ___
@@ -301,3 +301,98 @@ private func changeLabelText(into text: inout String, at sender: UIButton) {
     operatorLabel?.text = text
 }
 ```
+
+## 4️⃣ 계산기(모둠) Step 1
+---
+### 🤔 Step 1에서 고민했던 부분 
+___
+#### 1. `CalculatorItemQueue`에서 `item`을 queue로 관리하는 부분을 누구의 코드로 선택해야할 지 고민했습니다. 
+숲재의 경우 `CalculatroItemQueue`를 LinkedList로 구현했었고, 저의의 경우 DoubleStack과 유사한 방식으로 구현을 했었습니다.
+두 방법 모두 Queue를 추가하고 삭제하는 시간 복잡도가 O(1)로 생각했습니다. 따라서 코드가 더 간결한 저의 방식으로 `CalculatorItemQueue` 구현 방식을 선택했습니다.
+
+또한 `CalculatorItemQueue`의 로직의 차이로 숲재의 `Formula` 또한 사용할 수 없어, 저의 `Formula`를 가져와 병합하였습니다.
+
+#### 2. convertSign 메서드에서 - 부호가 붙어있는지 검증하는 과정을 누구의 코드로 선택해야할 지 고민했습니다. 
+```swift=
+private func convertSign(from operand: String) -> String {
+     guard let sign = operand.first, sign == "-" else {
+         return "-" + operand 
+     }
+             
+     let signIndex: String.Index = operand.index(operand.startIndex, offsetBy: 1)
+
+     return String(operand[signIndex...])
+}
+```
+기존 숲재의 코드는 String타입의 `first` 프로퍼티를 사용하여 `-` 부호의 존재를 파악하고 `String.Index`를 사용하여 문자열을 자르는 방식으로 구현되었습니다.
+
+```swift=
+private func convertSign(from operand: inout String) -> String {
+    if operand.hasPrefix("−") {
+        operand.removeFirst()
+        return operand
+    } else {
+        return "−" + operand
+    }
+}
+```
+저의 코드는 `hasPrefix` 메소드를 사용하여 검증하고 `-`부호가 붙어있을 때 `removeFirst` 메소드를 사용하여 부호를 제거 해 주는 방식으로 구현되었습니다.
+숲재의 코드는 `first` 프로퍼티를 사용하여 옵셔널 언래핑과정이 추가되어야 하고 `-` 부호를 제거하는 과정도 복잡하기 때문에 좀 더 간결한 로직을 가진 저의 코드를 선택하였습니다.
+
+#### 3. parse 함수의 로직을 고민했습니다.
+```swift=
+static func parse(from input: String) -> Formula {
+     var operandsQueue = CalculatorItemQueue<Double>()
+     var operatorsQueue = CalculatorItemQueue<Operator>()
+
+     let operatorSet = Operator.allCases.map { String($0.rawValue) }
+     let operands = componentsByOperators(from: input).compactMap{ Double($0) }
+     let operators = input.split(with: " ")
+             .filter { operatorSet.contains($0) }
+             .compactMap { Operator(rawValue: Character($0)) }
+
+     operands.forEach { operandsQueue.appendItem($0) }
+     operators.forEach { operatorsQueue.appendItem($0) }
+
+     return Formula(operands: operandsQueue, operators: operatorsQueue)
+ }
+```
+
+숲재의 코드에는 불필요한 고차함수 사용이 많았습니다.
+
+```swift=
+static func parse(from input: String) -> Formula {
+    let operandsItems = CalculatorItemQueue(items: componentsByOperators(from: input).compactMap { Double($0) })
+    let operatorsItems = CalculatorItemQueue(items: input.compactMap { Operator(rawValue: $0) })
+    let formula = Formula(operands: operandsItems, operators: operatorsItems)
+        
+    return formula
+}
+```
+
+따라서 로직 상에는 거의 차이가 없지만, 좀 더 간결한 의 코드를 선택했습니다.
+
+---
+### 💡 계산기(모둠) Step 1에서 보완한 부분 및 새롭게 안 내용
+---
+```swift=
+func calculate(lhs: Double, rhs: Double) throws -> Double {
+    switch self {
+    ...
+    case .devide:
+        guard rhs != 0 else {
+            throw OperationError.devidedByZero
+            // return Double.nan
+        }
+        return devide(lhs: lhs, rhs: rhs)
+    ...
+}
+```
+`Double.nan`을 직접 반환하는 것이 좋을지 `OperationError.devidedByZero`에러를 던져주는 것이 좋을지 고민했습니다. 
+
+물론 이 부분을 `Double.nan`을 직접 반환하는 방식으로 구현해도 기능 상으로 전혀 문제가 없었지만 추후 나눗셈으로 0을 했을 때 다른 조치를 취할 수 있다고 판단했습니다. 따라서 nan 값 밖에 반환하지 못하도록 하는 것보단 이를 에러로 처리해서 추후 확장성을 가져가는 것이 더욱 적합하다 생각했습니다. 
+
+특히 SOLID의 개방폐쇄원칙에도 에러로 처리하는 것이 더욱 적합하다고 생각했습니다. 
+
+<br/>
+
