@@ -302,6 +302,13 @@ private func changeLabelText(into text: inout String, at sender: UIButton) {
 }
 ```
 
+<br/>
+
+---
+>계산기(모둠) 프로젝트의 경우 [@forestjae](https://github.com/forestjae)의 레포에서 진행되었습니다. 
+>따라서 해당 프로젝트에 해당하는 코드는 각 스텝 제목의 링크를 누르시면 확인이 가능합니다 🙏
+---
+
 ## 4️⃣ [계산기(모둠) Step 1](https://github.com/forestjae/ios-calculator-app/tree/step4)
 ---
 ### 🤔 Step 1에서 고민했던 부분 
