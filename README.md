@@ -302,7 +302,7 @@ private func changeLabelText(into text: inout String, at sender: UIButton) {
 }
 ```
 
-## 4️⃣ 계산기(모둠) Step 1
+## 4️⃣ [계산기(모둠) Step 1](https://github.com/forestjae/ios-calculator-app/tree/step4)
 ---
 ### 🤔 Step 1에서 고민했던 부분 
 ___
@@ -396,3 +396,32 @@ func calculate(lhs: Double, rhs: Double) throws -> Double {
 
 <br/>
 
+## 4️⃣ [계산기(모둠) Step 2](https://github.com/forestjae/ios-calculator-app/tree/step5)
+---
+### 🤔 Step 2에서 고민했던 부분 
+___
+#### 1️. CalculatorItemQueue를 완전한 Double Stack 형태로 바꾸는 것에 대해 고민했습니다. 
+기존에 코드에선 reversed()를 2번 실행하여 불필요하게 변수에 할당해주는 과정이 있었습니다. 
+단순히 reversed()를 할 때에는 시간복잡도가 O(1)이지만, 다른 변수에 할당할 때에는 O(n)의 시간 복잡도를 가졌기에 reversed()를 해서 할당하는 과정을 최소화했습니다. 
+
+``` swift=
+mutating func dequeue() -> Element? {
+    if dequeueStack.isEmpty {
+        dequeueStack = enqueueStack.reversed()
+        enqueueStack.removeAll()
+    }
+        
+    return dequeueStack.popLast()
+}
+```
+
+#### 2️. 피연산자가 음수이고 연산자가 +/- 일 경우 연산자와 피연산자를 수정하는 방법에 대해 고민했습니다. 
+- "1 - -5" -> "1 + 5"
+- "3 + -2" -> "3 - 2"
+
+위 예시처럼 피연산자가 음수일 경우 연산자와 피연산자를 수정하는 것이 UI에 올라갔을 때 더욱 깔끔하다고 판단했습니다. 
+따라서 `convertOperatorAndNegativeOperand` 메서드를 따로 생성하여 `hasPrefix`를 활용해 피연산자가 음수인지 확인 후 연산자와 피연산자를 처리해주도록 구현했습니다. 
+
+#### 3️. 기존에 `=` 연산자 버튼을 눌렀을 때 발생하는 오류에 대해, Alert를 통해 처리를 해주도록 고민했습니다.  
+기존에는 `OperationError.devidedByZero` 오류가 발생할 때에만 에러 처리를 해주었고 다른 오류에 대해선 에러 처리를 해주지 않고 있었습니다. 
+따라서, 에러 메세지를 호출하는 Alert를 생성하여 각 에러에 맞게 Alert가 호출되도록 구현했습니다. 
